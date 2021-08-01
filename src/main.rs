@@ -1,3 +1,9 @@
+use log::{debug, error, info, trace, warn};
+
+mod logs;
+
 fn main() {
-    println!("Hello, world!");
+    logs::setup().expect("unable to configure logger");
+
+    info!("setup!");
 }

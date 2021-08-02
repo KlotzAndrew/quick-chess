@@ -16,4 +16,4 @@ play:
 
 .PHONY: logs
 logs:
-	@tail -f /tmp/quick-chess/game.log
+	@tail -f /tmp/quick-chess/engine.log

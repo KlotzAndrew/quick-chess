@@ -39,7 +39,43 @@ impl Board {
         }
     }
 
-    pub fn print_board() {}
+    pub fn print(self) {
+        println!("{:?}", &self)
+    }
+
+    fn piece_at(self, row: u16, col: u16) -> Option<String> {
+        let square = coords_to_bit(row, col);
+        if self.black_pieces[3].is_bit_set(square) {
+            Some("R".to_owned())
+        } else if self.white_pieces[3].is_bit_set(square) {
+            Some("r".to_owned())
+        } else {
+            None
+        }
+    }
+}
+
+impl fmt::Debug for Board {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        for row in 0..8 {
+            for col in 0..8 {
+                let piece = self.piece_at(row, col);
+
+                let s = piece.unwrap_or(".".to_owned());
+
+                fmt.write_str(&s)?;
+                // if self.is_bit_set(coords_to_bit(row, col)) {
+                //     fmt.write_char('1')?;
+                // } else {
+                //     fmt.write_char('.')?;
+                // }
+                fmt.write_char(' ')?;
+            }
+            fmt.write_char('\n')?;
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Copy, Clone, PartialEq)]
@@ -67,6 +103,7 @@ impl fmt::Binary for Bitboard {
     }
 }
 
+// needed for print {:?}
 impl fmt::Debug for Bitboard {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         for row in 0..8 {
@@ -104,6 +141,9 @@ mod tests {
     #[test]
     fn test_print_board() {
         let current_board = Board::new();
+        current_board.print();
+
+        assert_eq!(1, 1)
     }
 
     #[test]

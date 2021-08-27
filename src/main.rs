@@ -1,12 +1,13 @@
-use log::{debug, error, info, trace, warn};
-use std::io::{self, BufRead, Read};
+use log::info;
+use std::io::{self, BufRead};
 
+mod board;
 mod logs;
 
 fn main() {
     logs::setup().expect("unable to configure logger");
 
-    let mut board = BoardModel::new();
+    let mut board = board::Board::new();
 
     let stdin = io::stdin();
     for line in stdin.lock().lines() {
@@ -17,7 +18,8 @@ fn main() {
     }
 }
 
-fn handle_line(board: BoardModel, line: String) -> BoardModel {
+fn handle_line(board: board::Board, line: String) -> board::Board {
+    println!("recieved ---- {}", line);
     let command: Vec<&str> = line.split_whitespace().collect();
 
     if line == "uci" {
@@ -33,10 +35,11 @@ fn handle_line(board: BoardModel, line: String) -> BoardModel {
         // position startpos moves e2e3
         if command.len() == 2 {
             // first move
-            write_msg("bestmove e2e3")
+            write_msg("bestmove e2e4")
         } else {
             let last_move = command[3];
             let (next_board, next_move) = find_next_move(board, last_move);
+            write_msg(&format!("bestmove {}", next_move));
             return next_board;
         }
         // position startpos moves e2e4
@@ -53,17 +56,8 @@ fn handle_line(board: BoardModel, line: String) -> BoardModel {
     board
 }
 
-fn find_next_move(board: BoardModel, last_move: &str) -> (BoardModel, &str) {
-    (board, "e2e3")
-}
-
-#[derive(Copy, Clone)]
-struct BoardModel {}
-
-impl BoardModel {
-    pub fn new() -> BoardModel {
-        BoardModel {}
-    }
+fn find_next_move(board: board::Board, last_move: &str) -> (board::Board, &str) {
+    (board, "e2e4")
 }
 
 fn write_msg(message: &str) {

@@ -2,39 +2,102 @@ use std::fmt::{self, Write};
 
 use std::ops::BitAnd;
 
-enum PieceIndex {
-    Pawns = 0,
-    Knights = 1,
-    Bishops = 2,
-    Rooks = 3,
-    Queens = 4,
-    Kings = 5,
+#[derive(Clone, Copy)]
+pub enum PieceType {
+    Pawn = 0,
+    Knight = 1,
+    Bishop = 2,
+    Rook = 3,
+    Queen = 4,
+    King = 5,
+}
+
+impl PieceType {
+    fn char(self) -> char {
+        match self {
+            PieceType::Pawn => 'p',
+            PieceType::Knight => 'n',
+            PieceType::Bishop => 'b',
+            PieceType::Rook => 'r',
+            PieceType::Queen => 'q',
+            PieceType::King => 'k',
+        }
+    }
+
+    fn char_upper(self) -> char {
+        match self {
+            PieceType::Pawn => 'P',
+            PieceType::Knight => 'N',
+            PieceType::Bishop => 'B',
+            PieceType::Rook => 'R',
+            PieceType::Queen => 'Q',
+            PieceType::King => 'K',
+        }
+    }
+}
+
+#[derive(PartialEq)]
+pub enum Color {
+    Black = 0,
+    White = 1,
+}
+
+impl Color {
+    fn from_white(white: bool) -> Color {
+        if white {
+            Color::White
+        } else {
+            Color::Black
+        }
+    }
+}
+
+pub struct Piece {
+    pub color: Color,
+    pub piece_type: PieceType,
+}
+
+impl Piece {
+    fn is_white(&self) -> bool {
+        self.color == Color::White
+    }
+    fn char(&self) -> char {
+        if self.is_white() {
+            self.piece_type.char()
+        } else {
+            self.piece_type.char_upper()
+        }
+    }
+}
+
+impl Piece {}
+
+#[derive(Copy, Clone)]
+pub struct BoardColor {
+    pub white: Bitboard,
+    pub black: Bitboard,
 }
 
 #[derive(Copy, Clone)]
 pub struct Board {
-    black_pieces: [Bitboard; 6],
-    white_pieces: [Bitboard; 6],
+    colors: [Bitboard; 2],
+    pieces: [Bitboard; 6],
 }
 
 impl Board {
     pub fn new() -> Board {
         Board {
-            black_pieces: [
-                Bitboard::new(0), // pawns
-                Bitboard::new(0), // knight
-                Bitboard::new(0), // bishops
-                Bitboard::new(0b1000000100000000000000000000000000000000000000000000000000000000), // rooks
-                Bitboard::new(0), // queens
-                Bitboard::new(0), // kings
+            colors: [
+                Bitboard::new(0b1111111100000000000000000000000000000000000000000000000000000000),
+                Bitboard::new(0b0000000000000000000000000000000000000000000000000000000011111111),
             ],
-            white_pieces: [
-                Bitboard::new(0),
-                Bitboard::new(0),
-                Bitboard::new(0),
-                Bitboard::new(0b0000000000000000000000000000000000000000000000000000000010000001),
-                Bitboard::new(0),
-                Bitboard::new(0),
+            pieces: [
+                Bitboard::new(0b0000000011111111000000000000000000000000000000001111111100000000), // pawns
+                Bitboard::new(0b0010010000000000000000000000000000000000000000000000000000100100), // knights
+                Bitboard::new(0b0100001000000000000000000000000000000000000000000000000001000010), // bishops
+                Bitboard::new(0b1000000100000000000000000000000000000000000000000000000010000001), // rooks
+                Bitboard::new(0b0000100000000000000000000000000000000000000000000000000000001000), //queens
+                Bitboard::new(0b0001000000000000000000000000000000000000000000000000000000010000), // kings
             ],
         }
     }
@@ -43,15 +106,65 @@ impl Board {
         println!("{:?}", &self)
     }
 
-    fn piece_at(self, row: u16, col: u16) -> Option<String> {
+    fn pawns(&self) -> Bitboard {
+        self.pieces[0]
+    }
+
+    fn knights(&self) -> Bitboard {
+        self.pieces[1]
+    }
+
+    fn bishops(&self) -> Bitboard {
+        self.pieces[2]
+    }
+
+    fn rooks(&self) -> Bitboard {
+        self.pieces[3]
+    }
+
+    fn queens(&self) -> Bitboard {
+        self.pieces[4]
+    }
+
+    fn kings(&self) -> Bitboard {
+        self.pieces[5]
+    }
+
+    fn black(&self) -> Bitboard {
+        self.colors[0]
+    }
+
+    fn white(&self) -> Bitboard {
+        self.colors[1]
+    }
+
+    fn piece_type_at(self, row: u16, col: u16) -> Option<PieceType> {
         let square = coords_to_bit(row, col);
-        if self.black_pieces[3].is_bit_set(square) {
-            Some("R".to_owned())
-        } else if self.white_pieces[3].is_bit_set(square) {
-            Some("r".to_owned())
+        if self.pawns().is_bit_set(square) {
+            Some(PieceType::Pawn)
+        } else if self.knights().is_bit_set(square) {
+            Some(PieceType::Knight)
+        } else if self.bishops().is_bit_set(square) {
+            Some(PieceType::Bishop)
+        } else if self.rooks().is_bit_set(square) {
+            Some(PieceType::Rook)
+        } else if self.queens().is_bit_set(square) {
+            Some(PieceType::Queen)
+        } else if self.kings().is_bit_set(square) {
+            Some(PieceType::King)
         } else {
             None
         }
+    }
+
+    fn piece_at(self, row: u16, col: u16) -> Option<Piece> {
+        let square = coords_to_bit(row, col);
+        let piece_type = self.piece_type_at(row, col);
+
+        piece_type.map(|piece_type| Piece {
+            color: Color::from_white(self.white().is_bit_set(square)),
+            piece_type,
+        })
     }
 }
 
@@ -61,14 +174,10 @@ impl fmt::Debug for Board {
             for col in 0..8 {
                 let piece = self.piece_at(row, col);
 
-                let s = piece.unwrap_or(".".to_owned());
+                let c = piece.map_or('.', |piece| piece.char());
 
-                fmt.write_str(&s)?;
-                // if self.is_bit_set(coords_to_bit(row, col)) {
-                //     fmt.write_char('1')?;
-                // } else {
-                //     fmt.write_char('.')?;
-                // }
+                fmt.write_char(c)?;
+
                 fmt.write_char(' ')?;
             }
             fmt.write_char('\n')?;
@@ -80,7 +189,7 @@ impl fmt::Debug for Board {
 
 #[derive(Copy, Clone, PartialEq)]
 
-struct Bitboard(u64);
+pub struct Bitboard(u64);
 
 impl Bitboard {
     pub fn new(n: u64) -> Bitboard {

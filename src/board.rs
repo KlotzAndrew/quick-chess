@@ -1,6 +1,7 @@
 use std::fmt::{self, Write};
 
 use std::ops::BitAnd;
+use std::ops::BitXor;
 
 #[derive(Clone, Copy)]
 pub enum PieceType {
@@ -88,13 +89,13 @@ impl Board {
     pub fn new() -> Board {
         Board {
             colors: [
-                Bitboard::new(0b1111111100000000000000000000000000000000000000000000000000000000),
-                Bitboard::new(0b0000000000000000000000000000000000000000000000000000000011111111),
+                Bitboard::new(0b1111111111111111000000000000000000000000000000000000000000000000),
+                Bitboard::new(0b0000000000000000000000000000000000000000000000001111111111111111),
             ],
             pieces: [
                 Bitboard::new(0b0000000011111111000000000000000000000000000000001111111100000000), // pawns
-                Bitboard::new(0b0010010000000000000000000000000000000000000000000000000000100100), // knights
-                Bitboard::new(0b0100001000000000000000000000000000000000000000000000000001000010), // bishops
+                Bitboard::new(0b0100001000000000000000000000000000000000000000000000000001000010), // knights
+                Bitboard::new(0b0010010000000000000000000000000000000000000000000000000000100100), // bishops
                 Bitboard::new(0b1000000100000000000000000000000000000000000000000000000010000001), // rooks
                 Bitboard::new(0b0000100000000000000000000000000000000000000000000000000000001000), //queens
                 Bitboard::new(0b0001000000000000000000000000000000000000000000000000000000010000), // kings
@@ -239,6 +240,13 @@ impl BitAnd for Bitboard {
     }
 }
 
+impl BitXor for Bitboard {
+    type Output = Self;
+    fn bitxor(self, rhs: Bitboard) -> Bitboard {
+        Self(self.0 ^ rhs.0)
+    }
+}
+
 fn coords_to_bit(row: u16, col: u16) -> u16 {
     row * 8 + col
 }
@@ -252,7 +260,34 @@ mod tests {
         let current_board = Board::new();
         current_board.print();
 
-        assert_eq!(1, 1)
+        // assert_eq!(1, 1);
+
+        let white_and_black = current_board.white() ^ current_board.black();
+
+        let all_pieces = current_board.pawns()
+            ^ current_board.knights()
+            ^ current_board.bishops()
+            ^ current_board.rooks()
+            ^ current_board.queens()
+            ^ current_board.kings();
+
+        assert_eq!(
+            format!("{:0b}", white_and_black),
+            format!("{:0b}", all_pieces)
+        );
+
+        let zero_pieces = current_board.pawns()
+            & current_board.knights()
+            & current_board.bishops()
+            & current_board.rooks()
+            & current_board.queens()
+            & current_board.kings();
+
+        assert_eq!(format!("{:0b}", zero_pieces), format!("{:0b}", 0));
+        assert_eq!(
+            format!("{:0b}", current_board.white() & current_board.black()),
+            format!("{:0b}", 0)
+        );
     }
 
     #[test]

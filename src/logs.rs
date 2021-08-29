@@ -1,8 +1,6 @@
 use log::{debug, error, info, trace, warn, LevelFilter, SetLoggerError};
 use log4rs::{
-    append::{
-        file::FileAppender,
-    },
+    append::file::FileAppender,
     config::{Appender, Config, Root},
     encode::pattern::PatternEncoder,
 };
@@ -12,7 +10,9 @@ pub fn setup() -> Result<(), SetLoggerError> {
 
     // Pattern: https://docs.rs/log4rs/*/log4rs/encode/pattern/index.html
     let logfile = FileAppender::builder()
-        .encoder(Box::new(PatternEncoder::new("{d(%Y-%m-%d %H:%M:%S %Z)(utc)} {l} - {m}\n")))
+        .encoder(Box::new(PatternEncoder::new(
+            "{d(%Y-%m-%d %H:%M:%S %Z)(utc)} {l} - {m}\n",
+        )))
         .build(file_path)
         .unwrap();
 

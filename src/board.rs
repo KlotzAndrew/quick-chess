@@ -1,7 +1,9 @@
 use std::fmt::{self, Write};
 
-use std::ops::BitAnd;
+use std::ops::BitOr;
 use std::ops::BitXor;
+use std::ops::Shl;
+use std::ops::{BitAnd, BitAndAssign};
 
 #[derive(Clone, Copy)]
 pub enum PieceType {
@@ -107,35 +109,35 @@ impl Board {
         println!("{:?}", &self)
     }
 
-    fn pawns(&self) -> Bitboard {
+    pub fn pawns(&self) -> Bitboard {
         self.pieces[0]
     }
 
-    fn knights(&self) -> Bitboard {
+    pub fn knights(&self) -> Bitboard {
         self.pieces[1]
     }
 
-    fn bishops(&self) -> Bitboard {
+    pub fn bishops(&self) -> Bitboard {
         self.pieces[2]
     }
 
-    fn rooks(&self) -> Bitboard {
+    pub fn rooks(&self) -> Bitboard {
         self.pieces[3]
     }
 
-    fn queens(&self) -> Bitboard {
+    pub fn queens(&self) -> Bitboard {
         self.pieces[4]
     }
 
-    fn kings(&self) -> Bitboard {
+    pub fn kings(&self) -> Bitboard {
         self.pieces[5]
     }
 
-    fn black(&self) -> Bitboard {
+    pub fn black(&self) -> Bitboard {
         self.colors[0]
     }
 
-    fn white(&self) -> Bitboard {
+    pub fn white(&self) -> Bitboard {
         self.colors[1]
     }
 
@@ -190,7 +192,7 @@ impl fmt::Debug for Board {
 
 #[derive(Copy, Clone, PartialEq)]
 
-pub struct Bitboard(u64);
+pub struct Bitboard(pub u64);
 
 impl Bitboard {
     pub fn new(n: u64) -> Bitboard {
@@ -201,8 +203,12 @@ impl Bitboard {
         println!("{:?}", &self)
     }
 
-    fn is_bit_set(self, i: u16) -> bool {
+    pub fn is_bit_set(self, i: u16) -> bool {
         (self & (Bitboard::new(1 << i))) != Bitboard::new(0)
+    }
+
+    pub fn clear_bit(&self, i: u32) -> Bitboard {
+        *self & Bitboard(!(1 << i))
     }
 }
 
@@ -240,10 +246,31 @@ impl BitAnd for Bitboard {
     }
 }
 
+impl BitAndAssign for Bitboard {
+    fn bitand_assign(&mut self, rhs: Self) {
+        *self = Self(self.0 & rhs.0)
+    }
+}
+
 impl BitXor for Bitboard {
     type Output = Self;
     fn bitxor(self, rhs: Bitboard) -> Bitboard {
         Self(self.0 ^ rhs.0)
+    }
+}
+
+impl BitOr for Bitboard {
+    type Output = Self;
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self(self.0 | rhs.0)
+    }
+}
+
+impl Shl<Bitboard> for Bitboard {
+    type Output = Self;
+    fn shl(self, Self(rhs): Self) -> Self::Output {
+        let Self(lhs) = self;
+        Self(lhs << rhs)
     }
 }
 

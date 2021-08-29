@@ -3,6 +3,7 @@ use std::io::{self, BufRead};
 
 mod board;
 mod logs;
+mod moves;
 
 fn main() {
     logs::setup().expect("unable to configure logger");
@@ -18,7 +19,7 @@ fn main() {
     }
 }
 
-fn handle_line(board: board::Board, line: String) -> board::Board {
+fn handle_line(mut board: board::Board, line: String) -> board::Board {
     println!("recieved ---- {}", line);
     let command: Vec<&str> = line.split_whitespace().collect();
 
@@ -35,13 +36,15 @@ fn handle_line(board: board::Board, line: String) -> board::Board {
         // position startpos moves e2e3
         if command.len() == 2 {
             // first move
-            write_msg("bestmove e2e4")
+            // write_msg("bestmove e2e4")
         } else {
+            // apply opposition player move
             let last_move = command[3];
-            let (next_board, next_move) = find_next_move(board, last_move);
-            write_msg(&format!("bestmove {}", next_move));
-            return next_board;
+            board = moves::apply_move(board, last_move);
         }
+        let next_move = moves::best_move(board);
+        write_msg(&format!("bestmove {}", next_move));
+        return moves::apply_move(board, &next_move);
         // position startpos moves e2e4
     } else if command[0] == "go" {
         // go wtime 2000 btime 2000 movestogo 180
@@ -54,10 +57,6 @@ fn handle_line(board: board::Board, line: String) -> board::Board {
         write_msg(&format!("unhandled msg: {}", line));
     }
     board
-}
-
-fn find_next_move(board: board::Board, last_move: &str) -> (board::Board, &str) {
-    (board, "e2e4")
 }
 
 fn write_msg(message: &str) {
